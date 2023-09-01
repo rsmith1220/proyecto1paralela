@@ -6,7 +6,26 @@
 const int WINDOW_WIDTH = 800;
 const int WINDOW_HEIGHT = 600;
 
+class Circle {
+public:
+    float x, y, radius;
+    SDL_Color color;
 
+    // Renderiza el circulo en la pantalla 
+    void render(SDL_Renderer* renderer) {
+        // Itera sobre todos los pixeles del circulo
+        for (int w = 0; w < radius * 2; w++) {
+            for (int h = 0; h < radius * 2; h++) {
+                int dx = radius - w;
+                int dy = radius - h;
+                if ((dx * dx + dy * dy) <= (radius * radius)) {
+                    SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
+                    SDL_RenderDrawPoint(renderer, x + dx, y + dy);
+                }
+            }
+        }
+    }
+};
 
 int main(int argc, char* argv[]) {
     SDL_Init(SDL_INIT_VIDEO);
