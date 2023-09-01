@@ -18,6 +18,18 @@ public:
         velocityY = (rand()%100)-50;
     }
 
+    
+    void update(float dt){
+        x += velocityX*dt;
+        y += velocityY*dt;
+
+        if(x-radius < 0 || x+radius > WINDOW_WIDTH){
+            velocityX = -velocityX;
+        }
+        if (y-radius < 0 || y+radius > WINDOW_HEIGHT){
+            velocityY = -velocityY;
+        }
+    }
 
     // Renderiza el circulo en la pantalla 
     void render(SDL_Renderer* renderer) {
