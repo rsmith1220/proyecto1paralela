@@ -9,7 +9,15 @@ const int WINDOW_HEIGHT = 600;
 class Circle {
 public:
     float x, y, radius;
+    float velocityx, velocityY;
     SDL_Color color;
+
+    MovingCircle(float x, float y, float radius, const SDL_Color& color)
+    : x(x), y(y), radius(radius), color(color){
+        velocityX = (rand()%100)-50;
+        velocityY = (rand()%100)-50;
+    }
+
 
     // Renderiza el circulo en la pantalla 
     void render(SDL_Renderer* renderer) {
