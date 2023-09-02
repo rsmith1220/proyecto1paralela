@@ -2,38 +2,44 @@
 #include <vector>
 #include <string>
 #include <cstdlib>
+#include <iostream>
+#include <limits>
+
+
+using namespace std;
 
 const int WINDOW_WIDTH = 800;
 const int WINDOW_HEIGHT = 600;
 
-class Circle {
+// Class representing a moving circle
+class MovingCircle {
 public:
     float x, y, radius;
-    float velocityx, velocityY;
+    float velocityX, velocityY;
     SDL_Color color;
 
     MovingCircle(float x, float y, float radius, const SDL_Color& color)
-    : x(x), y(y), radius(radius), color(color){
-        velocityX = (rand()%100)-50;
-        velocityY = (rand()%100)-50;
+        : x(x), y(y), radius(radius), color(color) {
+        velocityX = (rand() % 100) - 50; // random between -50 and 50
+        velocityY = (rand() % 100) - 50;
     }
 
-    
-    void update(float dt){
-        x += velocityX*dt;
-        y += velocityY*dt;
+    // Update the position of the circle based on its velocity
+    void update(float dt) {
+        x += velocityX * dt;
+        y += velocityY * dt;
 
-        if(x-radius < 0 || x+radius > WINDOW_WIDTH){
+        // Bounce off the edges
+        if (x - radius < 0 || x + radius > WINDOW_WIDTH) {
             velocityX = -velocityX;
         }
-        if (y-radius < 0 || y+radius > WINDOW_HEIGHT){
+        if (y - radius < 0 || y + radius > WINDOW_HEIGHT) {
             velocityY = -velocityY;
         }
     }
 
-    // Renderiza el circulo en la pantalla 
     void render(SDL_Renderer* renderer) {
-        // Itera sobre todos los pixeles del circulo
+        
         for (int w = 0; w < radius * 2; w++) {
             for (int h = 0; h < radius * 2; h++) {
                 int dx = radius - w;
@@ -48,19 +54,38 @@ public:
 };
 
 int main(int argc, char* argv[]) {
-    
     SDL_Init(SDL_INIT_VIDEO);
+
+    int circulos;
+do {
+    cout << "Ingrese la cantidad de circulos: ";
+    cin >> circulos;
+
+    // Clear the input buffer if the user enters something that's not an integer
+    if(cin.fail()) {
+        cin.clear();
+        cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        cout << "Por favor, ingrese un número válido." << endl;
+        continue;
+    }
+
+    if (circulos <= 0) {
+        cout << "El número debe ser positivo y mayor que cero. Inténtalo de nuevo." << endl;
+    }
+
+} while (circulos <= 0);
+    
 
     SDL_Window* window = SDL_CreateWindow("Screensaver", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WINDOW_WIDTH, WINDOW_HEIGHT, 0);
     SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 
     std::vector<MovingCircle> circles;
-    for (int i = 0; i < 100; i++) {
+    for (int i = 0; i < circulos; i++) {
         SDL_Color randomColor = { Uint8(rand() % 256), Uint8(rand() % 256), Uint8(rand() % 256), 255 };
         circles.push_back(MovingCircle(rand() % WINDOW_WIDTH, rand() % WINDOW_HEIGHT, 10 + rand() % 20, randomColor));
     }
 
-    // Calculo FPS
+    // For FPS calculation
     uint32_t frameCount = 0;
     uint32_t startTime = SDL_GetTicks();
     uint32_t currentTime = startTime;
@@ -78,7 +103,7 @@ int main(int argc, char* argv[]) {
         SDL_RenderClear(renderer);
 
         for (auto& circle : circles) {
-            circle.update(0.016f);  // Asumiendo 60 fps
+            circle.update(0.016f);  
             circle.render(renderer);
         }
 
@@ -86,6 +111,13 @@ int main(int argc, char* argv[]) {
 
         frameCount++;
 
+        if (SDL_GetTicks() - currentTime > 1000) {
+            char title[100];
+            snprintf(title, sizeof(title), "Screensaver - FPS: %d", frameCount);
+            SDL_SetWindowTitle(window, title);
+            frameCount = 0;
+            currentTime += 1000;
+        }
     }
 
     SDL_DestroyRenderer(renderer);
