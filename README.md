@@ -19,6 +19,6 @@ g++ main.cpp -o <name> 'sdl2-config --cflags --libs'
 
 Y luego se ejecuta de la siguiente manera
 ```bash
-./<name> <#ofCircles>
+./<name> 
 ```
 
