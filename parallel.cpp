@@ -4,7 +4,7 @@
 #include <cstdlib>
 #include <iostream>
 #include <limits>
-
+#include <omp.h>
 
 using namespace std;
 
@@ -39,7 +39,8 @@ public:
     }
 
     void render(SDL_Renderer* renderer) {
-        
+        // This is a simple way to render circles using SDL's draw points function.
+        // For better performance, consider using SDL_gfx or another library.
         for (int w = 0; w < radius * 2; w++) {
             for (int h = 0; h < radius * 2; h++) {
                 int dx = radius - w;
@@ -54,10 +55,15 @@ public:
 };
 
 int main(int argc, char* argv[]) {
+    int numThreads;
+    /*if (argc > 1) {
+        // Convert the first argument to an integer and set the number of threads
+        numThreads = std::stoi(argv[1]);
+        omp_set_num_threads(numThreads);
+    }*/
     SDL_Init(SDL_INIT_VIDEO);
-
     int circulos;
-do {
+    do {
     cout << "Ingrese la cantidad de circulos: ";
     cin >> circulos;
 
@@ -74,7 +80,6 @@ do {
     }
 
 } while (circulos <= 0);
-    
 
     SDL_Window* window = SDL_CreateWindow("Screensaver", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WINDOW_WIDTH, WINDOW_HEIGHT, 0);
     SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
@@ -85,13 +90,17 @@ do {
         circles.push_back(MovingCircle(rand() % WINDOW_WIDTH, rand() % WINDOW_HEIGHT, 10 + rand() % 20, randomColor));
     }
 
-    // For FPS calculation
+    // For FPS calculation and capping
+    const int TARGET_FPS = 144;
+    const int TARGET_FRAME_DURATION = 1000 / TARGET_FPS;
     uint32_t frameCount = 0;
     uint32_t startTime = SDL_GetTicks();
     uint32_t currentTime = startTime;
 
     bool running = true;
     while (running) {
+        uint32_t frameStart = SDL_GetTicks();
+
         SDL_Event event;
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT || event.type == SDL_KEYDOWN) {
@@ -102,8 +111,13 @@ do {
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
         SDL_RenderClear(renderer);
 
+        #pragma omp parallel for num_threads(8)
         for (auto& circle : circles) {
-            circle.update(0.016f);  
+            circle.update(0.016f);  // Assuming ~60FPS for simplicity
+        }
+
+        // Rendering cannot be done in parallel due to SDL limitations
+        for (auto& circle : circles) {
             circle.render(renderer);
         }
 
@@ -111,12 +125,18 @@ do {
 
         frameCount++;
 
-        if (SDL_GetTicks() - currentTime >= 1000) {
+        if (SDL_GetTicks() - currentTime > 1000) {
             char title[100];
             snprintf(title, sizeof(title), "Screensaver - FPS: %d", frameCount);
             SDL_SetWindowTitle(window, title);
             frameCount = 0;
             currentTime += 1000;
+        }
+
+        // Frame rate capping to 144 fps
+        int frameTime = SDL_GetTicks() - frameStart;
+        if (frameTime < TARGET_FRAME_DURATION) {
+            SDL_Delay(TARGET_FRAME_DURATION - frameTime);
         }
     }
 
